@@ -2,6 +2,8 @@ import React from 'react'
 import * as BooksAPI from './BooksAPI'
 import './App.css'
 import ListBooks from './ListBooks'
+import { Route } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 
 class BooksApp extends React.Component {
@@ -61,10 +63,12 @@ updateBook = (book, shelf) => {
   }
 
 searchBooks = (query) => {
-  	this.setState(() => ({
+  console.log('text',query); 
+  	this.setState({
         query: query.trim()
-      }))
-  
+      })
+  console.log('state',this.state.query); 
+  if(this.state.query !== ''){
 	BooksAPI.search(this.state.query, 4)
       .then((searchedBooks) => {
        if(Array.isArray(searchedBooks)){
@@ -74,6 +78,11 @@ searchBooks = (query) => {
        }
         console.log('All',this.state.searchedBooks); 
       })
+  }else{
+    this.setState(()=>({
+    	searchedBooks:[]
+    }))
+  }
 }
 
 
