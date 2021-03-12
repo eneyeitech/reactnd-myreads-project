@@ -14,7 +14,8 @@ class BooksApp extends React.Component {
      */
     showSearchPage: false,
     books:[],
-    
+    searchedBooks: [],
+    query:''
   }
 
   componentDidMount() {
@@ -32,12 +33,23 @@ selectHandler = (value,book) => {
 	//console.log('Select Value',value);
   	//console.log('Book',book.title);
   	const elementsIndex = this.state.books.findIndex(b => b.id === book.id );
-  	let newArray = [...this.state.books];
+  	
+  	console.log(elementsIndex);
+  if(elementsIndex===-1){
+    const newBook = {...book, shelf: value}
+    this.setState((prevState) => ({
+        books: prevState.books.concat([newBook])
+    }));
+  }else{
+    let newArray = [...this.state.books];
   	newArray[elementsIndex] = {...newArray[elementsIndex], shelf: value};
-  	//console.log('New Array', newArray);
+  
   	this.setState(() => ({
         books: newArray
     }));
+  }
+  	//console.log('New Array', newArray);
+  	
   	this.updateBook(book, value);
 }
 
@@ -48,12 +60,28 @@ updateBook = (book, shelf) => {
     })
   }
 
+searchBooks = (query) => {
+  	this.setState(() => ({
+        query: query.trim()
+      }))
+  
+	BooksAPI.search(this.state.query, 4)
+      .then((searchedBooks) => {
+       if(Array.isArray(searchedBooks)){
+        this.setState(() => ({
+          searchedBooks
+        }))
+       }
+        console.log('All',this.state.searchedBooks); 
+      })
+}
+
 
   render() {
     
     //const r = BooksAPI.getAll();
 //	console.log('All',r);   
-    const {books} = this.state;
+    const {books, query, searchedBooks} = this.state;
     const readBooks = books.filter((book)=>(
     book.shelf === 'read'
     ));
@@ -79,12 +107,15 @@ const currentlyReadingBooks = books.filter((book)=>(
                   However, remember that the BooksAPI.search method DOES search by title or author. So, don't worry if
                   you don't find a specific author or title. Every search is limited by search terms.
                 */}
-                <input type="text" placeholder="Search by title or author"/>
+                <input type="text" placeholder="Search by title or author"
+					value={query}
+              		onChange={(event) => this.searchBooks(event.target.value)}
+				/>
 
               </div>
             </div>
             <div className="search-books-results">
-              <ListBooks showingBooks={[]} onSelectHandler={this.selectHandler}/>
+              <ListBooks showingBooks={searchedBooks} onSelectHandler={this.selectHandler}/>
             </div>
           </div>
         ) : (

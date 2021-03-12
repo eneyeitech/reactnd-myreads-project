@@ -10,7 +10,7 @@ function BookCard(props){
                             <div className="book-shelf-changer">
                               <select 
 								onChange={(event) => onSelectHandler(event.target.value,book)}
-								value={book.shelf}
+								value={book.shelf ? book.shelf : 'none'}
 								>
                                 <option value="move" disabled>Move to...</option>
                                 <option value="currentlyReading">Currently Reading</option>
@@ -21,7 +21,7 @@ function BookCard(props){
                             </div>
                           </div>
                           <div className="book-title">{book.title}</div>
-                          <div className="book-authors">{book.authors.map((author)=>(`${author}`))}</div>
+                          <div className="book-authors">{book.authors && book.authors.map((author)=>(`${author}`))}</div>
                         </div>
                         
   )
