@@ -17,7 +17,8 @@ class BooksApp extends React.Component {
     showSearchPage: false,
     books:[],
     searchedBooks: [],
-    query:''
+    query:'',
+    errorInSearch: false
   }
 
   componentDidMount() {
@@ -30,6 +31,33 @@ class BooksApp extends React.Component {
       })
 	
   }
+	componentDidUpdate(prevProps, prevState) {
+  	if (prevState.query !== this.state.query) {
+  	BooksAPI.search(this.state.query, 4)
+      .then((searchedBooks) => {
+       if(Array.isArray(searchedBooks)){
+        this.setState(() => ({
+          searchedBooks,
+          errorInSearch: false
+        }))
+       }else{
+        if(this.state.query !== ''){
+        this.setState(() => ({
+          searchedBooks:[],
+          errorInSearch: true
+        }))
+       }
+       }
+        console.log('All',this.state.searchedBooks); 
+      }).catch((e)=>{
+      	console.log('Error',e);
+    	this.setState(() => ({
+          searchedBooks:[],
+          errorInSearch: true
+        }))
+    })
+ 	 }
+	}
 
 selectHandler = (value,book) => {
 	//console.log('Select Value',value);
@@ -63,26 +91,25 @@ updateBook = (book, shelf) => {
   }
 
 searchBooks = (query) => {
-  console.log('text',query); 
+
+  
+  if (query.trim() === '') {
+      this.setState({
+        searchedBooks: [],
+        query: '',
+        errorInSearch: false
+      })
+      return
+    }
+  
+    console.log('text',query); 
   	this.setState({
-        query: query.trim()
+        query: query,
+      
       })
-  console.log('state',this.state.query); 
-  if(this.state.query !== ''){
-	BooksAPI.search(this.state.query, 4)
-      .then((searchedBooks) => {
-       if(Array.isArray(searchedBooks)){
-        this.setState(() => ({
-          searchedBooks
-        }))
-       }
-        console.log('All',this.state.searchedBooks); 
-      })
-  }else{
-    this.setState(()=>({
-    	searchedBooks:[]
-    }))
-  }
+  
+	
+ 
 }
 
 
@@ -90,7 +117,7 @@ searchBooks = (query) => {
     
     //const r = BooksAPI.getAll();
 //	console.log('All',r);   
-    const {books, query, searchedBooks} = this.state;
+    const {books, query, searchedBooks, errorInSearch} = this.state;
     const readBooks = books.filter((book)=>(
     book.shelf === 'read'
     ));
@@ -100,7 +127,15 @@ const wantToReadBooks = books.filter((book)=>(
 const currentlyReadingBooks = books.filter((book)=>(
     book.shelf === 'currentlyReading'
     ))
-    
+const modifiedSearchedBooks = searchedBooks.map((book)=>{
+		let found = books.find((b)=>(
+          //console.log(b.id===book.id);
+        	b.id === book.id
+        ));
+  
+  		return (found instanceof Object) ? {...book, shelf: found.shelf}:book;
+	})
+    console.log('modifiedSearchedBooks',modifiedSearchedBooks);
     return (
       <div className="app">
       <Route path='/search' render={({history})=>(
@@ -127,7 +162,14 @@ const currentlyReadingBooks = books.filter((book)=>(
               </div>
             </div>
             <div className="search-books-results">
-              <ListBooks showingBooks={searchedBooks} onSelectHandler={this.selectHandler}/>
+			{modifiedSearchedBooks.length > 0 && (
+            <div>
+              <h3>Search returned {searchedBooks.length} books </h3>
+              <ListBooks showingBooks={modifiedSearchedBooks} onSelectHandler={this.selectHandler}/></div>
+   )}
+{errorInSearch && (
+            <h3>Search did not return any books. Please try again!</h3>
+          )}
             </div>
           </div>
 )} />
